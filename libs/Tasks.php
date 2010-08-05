@@ -1,5 +1,13 @@
 <?php
-
+/**
+ * Tasks Management Class
+ *
+ * This class wraps the plugin's tasks which are associated with cron jobs
+ *
+ * @package Tweester
+ * @subpackage Tasks
+ * @author Rafael Dohms
+ */
 class Tweester_Tasks
 {
     /**
@@ -8,6 +16,10 @@ class Tweester_Tasks
      */
     private $coreManager;
 
+    /**
+     * Registers actions to the available cron hooks
+     * @param Tweester $coreManager
+     */
     public function __construct($coreManager)
     {
         //Set CoreManager
@@ -17,17 +29,31 @@ class Tweester_Tasks
         add_action("tweester_searcher", array($this, 'updateAuthors'));
         
     }
-    
+
+    /**
+     * Updates the Authors list executing a Twitter search for the parameters
+     * configured
+     */
     public function updateAuthors()
     {
-        $results = Tweester_Twitter::getSearchResults(get_option('tweester_query'));
-        
+        $results = Tweester_Twitter::getSearchResults($this->coreManager->getSettingsManager()->getOption('query')->getValue());
+
+        //Get list of excludes
+        $excludes = $this->coreManager->getSettingsManager()->getOption('excludes')->getValue();
+        $excludedArray = explode(',', $excludes);
+        $excludedArray = array_map('trim', $excludedArray);
+
         if ($results != false) {
             //Process, store supporters
             foreach($results as $tweet){
                 //Get Username
                 $username = $tweet->from_user;
-                
+
+                //Skip if in excluded
+                if (in_array($username, $excludedArray)) {
+                    continue;
+                }
+
                 //Check if already in base
                 $data = $this->coreManager->getDbManager()->get_row("SELECT * FROM ".$this->coreManager->getDbManager()->getTableNameFor('authors')." WHERE twitter = '".$username."'");
 
@@ -40,6 +66,24 @@ class Tweester_Tasks
         }
     }
 
+    /**
+     * Removes newly excluded authors from database upon filed update
+     */
+    public function removeExcludedAuthors()
+    {
+        //Get list of excludes
+        $excludes = $this->coreManager->getSettingsManager()->getOption('excludes')->getValue();
+        $excludedArray = explode(',', $excludes);
+        $excludedArray = array_map('trim', $excludedArray);
+
+        $query = "DELETE FROM ".$this->coreManager->getDbManager()->getTableNameFor('authors')." WHERE twitter IN ('".implode("','", $excludedArray)."')";
+
+        $this->coreManager->getDbManager()->query($query);
+    }
+
+    /**
+     * Registers cron job hooks to be used by the plugin
+     */
     public static function addCronHooks()
     {
         //Call Scheduling
