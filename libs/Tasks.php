@@ -36,7 +36,7 @@ class Tweester_Tasks
      */
     public function updateAuthors()
     {
-        $results = Tweester_Twitter::getSearchResults($this->coreManager->getSettingsManager()->getOption('query')->getValue());
+        $results = Tweester_Twitter::getMaxSearchResults($this->coreManager->getSettingsManager()->getOption('query')->getValue(), 15);
 
         //Get list of excludes
         $excludes = $this->coreManager->getSettingsManager()->getOption('excludes')->getValue();
@@ -64,6 +64,9 @@ class Tweester_Tasks
                 
             }
         }
+
+        //Update execution time
+        $this->coreManager->getSettingsManager()->getOption('cron_run_time')->setValue(time());
     }
 
     /**
@@ -78,6 +81,15 @@ class Tweester_Tasks
 
         $query = "DELETE FROM ".$this->coreManager->getDbManager()->getTableNameFor('authors')." WHERE twitter IN ('".implode("','", $excludedArray)."')";
 
+        $this->coreManager->getDbManager()->query($query);
+    }
+
+    /**
+     * Removes all authors currently in database
+     */
+    public function clearAuthors()
+    {
+        $query = "DELETE FROM ".$this->coreManager->getDbManager()->getTableNameFor('authors');
         $this->coreManager->getDbManager()->query($query);
     }
 

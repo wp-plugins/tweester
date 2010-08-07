@@ -3,10 +3,10 @@
 Plugin Name: Tweester
 Plugin URI: http://github.com/rdohms/Tweester
 Description: This plugin allows you to show a page of people who supported your cause on twitter.
-Version: 0.2.1
+Version: 0.3
 Author: Rafael Dohms
 Author URI: http://www.rafaeldohms.com.br
-License: CC
+License: Creative Commons Attribution-ShareAlike 3.0 Unported License [http://creativecommons.org/licenses/by-sa/3.0/]
 */
 
 //Include plugin files
@@ -18,7 +18,7 @@ require_once('libs/HTMLRenderer.php');
 require_once('libs/Twitter.php');
 
 //Define constants for use
-define('TWEESTER_MAINFILE', __FILE__);
+define('TWEESTER_MAINFILE', plugin_basename(__FILE__));
 
 //Register initialization and activation hooks
 register_activation_hook( TWEESTER_MAINFILE, array('Tweester', 'activateSelf') );

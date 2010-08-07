@@ -18,23 +18,25 @@ class Tweester_HTMLRenderer
      */
     public static function renderAuthorList($list)
     {
-        
+        $html = '<div id="tweester_list">';
+
         if (count($list) > 0) {
-            $html = "";
+            
             foreach($list as $user){
 
-                $html .= "<div class='tweester_div'>";
-                $html .= "<img src='".$user->profile_image_url."' class='tweester_img' width=48 height=48>";
-                $html .= "<p class='tweester_name'>".$user->name."</p>";
-                $html .= "<p class='tweester_bio'>".$user->description."</p>";
-                $html .= "<p class='tweester_url'><a href='".$user->url."'>Site</a> | <a href='http://twitter.com/".$user->screen_name."'>Twitter: @".$user->screen_name."</a></p>";
+                $html .= "<div class='user'>";
+                $html .= "<img src='".$user->profile_image_url."' class='avatar' width=48 height=48>";
+                $html .= "<p class='name'>".$user->name."</p>";
+                $html .= "<p class='bio'>".$user->description."</p>";
+                $html .= "<p class='url'><a href='".$user->url."'>Site</a> | <a href='http://twitter.com/".$user->screen_name."'>Twitter: @".$user->screen_name."</a></p>";
                 $html .= "</div>";
             
             }
         } else {
-            $html = '<div class="tweester_none">No supporters yet!</div>';
+            $html .= '<div class="none">No supporters yet!</div>';
         }
         
+        $html .= "</div>";
         return $html;
     }
 
@@ -64,7 +66,7 @@ class Tweester_HTMLRenderer
         echo 'Configuration for the Tweester plugin';
         echo '<form action="options.php" method="post">';
 
-        settings_fields(TWEESTER_MAINFILE);
+        settings_fields(Tweester_Settings::SETTINGS_GROUP);
         do_settings_sections(TWEESTER_MAINFILE);
 
         echo '<p class="submit"><input type="submit" name="submit" class="button-primary" value="Save Changes" /></p>';

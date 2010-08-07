@@ -2,6 +2,7 @@
 include('Settings/Option.php');
 include('Settings/Option/Query.php');
 include('Settings/Option/Excludes.php');
+include('Settings/Option/CronRunTime.php');
 
 /**
  * Settings Management Class
@@ -18,6 +19,8 @@ class Tweester_Settings
     const SECTION_SEARCH = 'tweester_section_search';
     const SECTION_TAG = 'tweester_section_tag';
     const SECTION_CRON = 'tweester_section_cron';
+
+    const SETTINGS_GROUP = 'tweester_options';
 
     /**
      * Central Core Manager
@@ -59,8 +62,8 @@ class Tweester_Settings
     public function registerSections()
     {
         add_settings_section(self::SECTION_SEARCH, 'Search and List', array($this, 'renderSearchSection'), TWEESTER_MAINFILE);
-        add_settings_section(self::SECTION_TAG, 'Inserting Tag', array($this, 'renderTagSection'), TWEESTER_MAINFILE);
         add_settings_section(self::SECTION_CRON, 'Updating Author list', array($this, 'renderCronSection'), TWEESTER_MAINFILE);
+        add_settings_section(self::SECTION_TAG, 'Inserting Tag', array($this, 'renderTagSection'), TWEESTER_MAINFILE);
     }
 
     /**
@@ -70,6 +73,7 @@ class Tweester_Settings
     {
         $this->configFields['query'] = new Tweester_Settings_Option_Query(self::SECTION_SEARCH, $this->coreManager);
         $this->configFields['excludes'] = new Tweester_Settings_Option_Excludes(self::SECTION_SEARCH, $this->coreManager);
+        $this->configFields['cron_run_time'] = new Tweester_Settings_Option_CronRunTime(self::SECTION_CRON, $this->coreManager);
     }
 
     /**
@@ -95,10 +99,31 @@ class Tweester_Settings
     public function renderCronSection()
     {
         global $pagenow, $plugin_page;
-        $forceUrl = $pagenow . "?page=" . $plugin_page . "&exec_action=run_update";
 
-        echo '<p>Tweester schedules itself to be executed every hour, using WordPress\' built-in scheduling. If needed you can for a DB update using the button below.</p>';
-        echo '<p><a href="'.$forceUrl.'">Force update</a></p>';
+        echo '<p>Tweester schedules itself to be executed every hour, using 
+            WordPress\' built-in scheduling. You can follow updates with the
+            information below and force an out-of-schedule update using the
+            commands below.</p>';
+
+        //Cron run time
+        $ctime = $this->getOption('cron_run_time')->getValue();
+        echo '<p>Supporter list was last updated at: <b>'.date('d/m/Y H:i:s', $ctime).'</b></p>';
+
+        //Action buttons
+        echo "<p>";
+
+        //Force Update
+        $forceUrl = $pagenow . "?page=" . $plugin_page . "&exec_action=run_update";
+        echo '<a href="'.$forceUrl.'" class="button-primary">Force update</a>';
+
+        echo "&nbsp;&nbsp;";
+
+        //Clear User Table
+        $clearUrl = $pagenow . "?page=" . $plugin_page . "&exec_action=clear_authors";
+        echo '<a href="'.$clearUrl.'" class="button-primary">Clear indexed supporters</a>';
+
+        echo "</p>";
+
     }
 
     /**
@@ -133,6 +158,10 @@ class Tweester_Settings
             case 'run_update':
                 $this->coreManager->getTaskManager()->updateAuthors();
                 $msg = "Authors Updated";
+            break;
+            case 'clear_authors':
+                $this->coreManager->getTaskManager()->clearAuthors();
+                $msg = "Current Authors removed.";
             break;
             default:
                 $msg = null;
